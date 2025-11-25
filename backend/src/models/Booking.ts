@@ -46,6 +46,12 @@ export class BookingModel {
     return repository.findOne({ where: { id } });
   }
 
+  static async update(id: string, data: Partial<{ userName: string; startTime: Date; endTime: Date; totalPrice: number }>): Promise<Booking | null> {
+    const repository = this.getRepository();
+    await repository.update(id, data);
+    return repository.findOne({ where: { id } });
+  }
+
   static async findAll(): Promise<Booking[]> {
     return this.getRepository().find({
       order: { createdAt: 'DESC' },

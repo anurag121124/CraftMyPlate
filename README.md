@@ -231,8 +231,9 @@ Response:
    - `DATABASE_URL`
    - `NODE_ENV=production`
    - `PORT` (usually auto-assigned)
-3. Build command: `npm run build`
-4. Start command: `npm start`
+3. Build command: `pnpm build`
+4. Pre-Deploy command: `pnpm migrate` (runs database migrations)
+5. Start command: `pnpm start`
 
 ### Frontend (Netlify/Vercel)
 1. Connect your GitHub repository

@@ -34,3 +34,19 @@ export const analyticsQuerySchema = z.object({
   path: ['to'],
 });
 
+export const updateBookingSchema = z.object({
+  userName: z.string().min(1, 'User name is required').optional(),
+  startTime: z.string().datetime('Invalid start time format').optional(),
+  endTime: z.string().datetime('Invalid end time format').optional(),
+}).refine((data) => {
+  if (data.startTime && data.endTime) {
+    const start = new Date(data.startTime);
+    const end = new Date(data.endTime);
+    return start < end;
+  }
+  return true;
+}, {
+  message: 'Start time must be before end time',
+  path: ['endTime'],
+});
+
