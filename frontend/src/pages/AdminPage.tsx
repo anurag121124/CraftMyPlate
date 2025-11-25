@@ -2,11 +2,14 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { bookingActions } from '../actions/bookingActions';
+import { analyticsActions } from '../actions/analyticsActions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
 import { Skeleton } from '../components/ui/skeleton';
+import { DatePicker } from '../components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -23,7 +26,7 @@ import {
   TableRow,
 } from '../components/ui/table';
 import { format } from 'date-fns';
-import { Edit2, X, Save, Trash2 } from 'lucide-react';
+import { Edit2, X, Save, Trash2, BarChart3 } from 'lucide-react';
 
 const AdminPage = () => {
   
@@ -40,9 +43,28 @@ const AdminPage = () => {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
 
+  // Analytics date range state
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const sevenDaysAgo = new Date(today);
+  sevenDaysAgo.setDate(today.getDate() - 7);
+  const sevenDaysFromNow = new Date(today);
+  sevenDaysFromNow.setDate(today.getDate() + 7);
+  const [fromDate, setFromDate] = useState<Date | undefined>(sevenDaysAgo);
+  const [toDate, setToDate] = useState<Date | undefined>(sevenDaysFromNow);
+
   const { data: bookings, isLoading: bookingsLoading } = useQuery({
     queryKey: ['bookings'],
     queryFn: bookingActions.getAllBookings,
+  });
+
+  const { data: analytics, refetch: refetchAnalytics, isLoading: analyticsLoading } = useQuery({
+    queryKey: ['analytics', fromDate, toDate],
+    queryFn: () => analyticsActions.getAnalytics({ 
+      from: fromDate ? format(fromDate, 'yyyy-MM-dd') : '', 
+      to: toDate ? format(toDate, 'yyyy-MM-dd') : '' 
+    }),
+    enabled: false, // Don't auto-fetch, require manual fetch
   });
 
   const cancelBookingMutation = useMutation({
@@ -129,6 +151,90 @@ const AdminPage = () => {
         <h1 className="text-4xl font-bold tracking-tight">Admin Dashboard</h1>
         <p className="text-muted-foreground mt-2">Manage and update bookings</p>
       </div>
+
+      {/* Analytics Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Analytics
+          </CardTitle>
+          <CardDescription>View revenue and utilization metrics by room</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex gap-4 items-end">
+              <div className="flex-1 space-y-2">
+                <Label>From Date</Label>
+                <DatePicker
+                  date={fromDate}
+                  onDateChange={setFromDate}
+                  placeholder="Select start date"
+                  maxDate={toDate}
+                />
+              </div>
+              <div className="flex-1 space-y-2">
+                <Label>To Date</Label>
+                <DatePicker
+                  date={toDate}
+                  onDateChange={setToDate}
+                  placeholder="Select end date"
+                  minDate={fromDate}
+                />
+              </div>
+              <Button onClick={() => refetchAnalytics()} disabled={analyticsLoading}>
+                {analyticsLoading ? 'Loading...' : 'Fetch Analytics'}
+              </Button>
+            </div>
+
+            {analyticsLoading ? (
+              <div className="space-y-2">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex gap-4 p-4">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                ))}
+              </div>
+            ) : analytics && analytics.length > 0 ? (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Room ID</TableHead>
+                      <TableHead>Room Name</TableHead>
+                      <TableHead className="text-right">Total Hours</TableHead>
+                      <TableHead className="text-right">Total Revenue</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {analytics.map((item) => (
+                      <TableRow key={item.roomId}>
+                        <TableCell className="font-mono text-sm">{item.roomId}</TableCell>
+                        <TableCell className="font-medium">{item.roomName}</TableCell>
+                        <TableCell className="text-right">{item.totalHours.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-semibold text-primary">
+                          ₹{item.totalRevenue.toFixed(2)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : analytics ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No analytics data found for the selected date range
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Click "Fetch Analytics" to load data
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
