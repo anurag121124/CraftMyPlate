@@ -33,6 +33,11 @@ class BookingModel {
         await repository.update(id, { status: 'CANCELLED' });
         return repository.findOne({ where: { id } });
     }
+    static async update(id, data) {
+        const repository = this.getRepository();
+        await repository.update(id, data);
+        return repository.findOne({ where: { id } });
+    }
     static async findAll() {
         return this.getRepository().find({
             order: { createdAt: 'DESC' },

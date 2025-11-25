@@ -58,5 +58,34 @@ class BookingController {
             res.status(500).json({ error: 'Failed to fetch bookings' });
         }
     }
+    static async updateBooking(req, res) {
+        try {
+            const { id } = req.params;
+            const validationResult = validation_1.updateBookingSchema.safeParse(req.body);
+            if (!validationResult.success) {
+                res.status(400).json({ error: validationResult.error.errors[0].message });
+                return;
+            }
+            const updateData = {};
+            if (validationResult.data.userName) {
+                updateData.userName = validationResult.data.userName;
+            }
+            if (validationResult.data.startTime) {
+                updateData.startTime = new Date(validationResult.data.startTime);
+            }
+            if (validationResult.data.endTime) {
+                updateData.endTime = new Date(validationResult.data.endTime);
+            }
+            const result = await bookingService_1.BookingService.updateBooking(id, updateData);
+            if (result.error || !result.booking) {
+                res.status(400).json({ error: result.error || 'Failed to update booking' });
+                return;
+            }
+            res.json({ message: 'Booking updated successfully', booking: result.booking });
+        }
+        catch (error) {
+            res.status(500).json({ error: 'Failed to update booking' });
+        }
+    }
 }
 exports.BookingController = BookingController;

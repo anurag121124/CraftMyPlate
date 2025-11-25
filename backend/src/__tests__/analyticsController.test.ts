@@ -78,7 +78,7 @@ describe('AnalyticsController', () => {
     });
 
     it('should return 500 on error', async () => {
-      (RoomModel.findAll as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (BookingModel.getAnalytics as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       mockRequest = {
         query: {

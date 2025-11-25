@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.analyticsQuerySchema = exports.createBookingSchema = void 0;
+exports.updateBookingSchema = exports.analyticsQuerySchema = exports.createBookingSchema = void 0;
 const zod_1 = require("zod");
 exports.createBookingSchema = zod_1.z.object({
     roomId: zod_1.z.string().min(1, 'Room ID is required'),
@@ -33,4 +33,19 @@ exports.analyticsQuerySchema = zod_1.z.object({
 }, {
     message: 'From date must be before or equal to to date',
     path: ['to'],
+});
+exports.updateBookingSchema = zod_1.z.object({
+    userName: zod_1.z.string().min(1, 'User name is required').optional(),
+    startTime: zod_1.z.string().datetime('Invalid start time format').optional(),
+    endTime: zod_1.z.string().datetime('Invalid end time format').optional(),
+}).refine((data) => {
+    if (data.startTime && data.endTime) {
+        const start = new Date(data.startTime);
+        const end = new Date(data.endTime);
+        return start < end;
+    }
+    return true;
+}, {
+    message: 'Start time must be before end time',
+    path: ['endTime'],
 });

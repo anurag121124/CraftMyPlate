@@ -126,11 +126,11 @@ export function DateTimePicker({
               onSelect={handleDateSelect}
               disabled={(date) => {
                 if (!minDate) return false;
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
                 const checkDate = new Date(date);
                 checkDate.setHours(0, 0, 0, 0);
-                return checkDate < minDate;
+                const checkMinDate = new Date(minDate);
+                checkMinDate.setHours(0, 0, 0, 0);
+                return checkDate < checkMinDate;
               }}
               initialFocus
             />

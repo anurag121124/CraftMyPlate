@@ -6,4 +6,5 @@ const router = (0, express_1.Router)();
 router.post('/', bookingController_1.BookingController.createBooking);
 router.get('/', bookingController_1.BookingController.getAllBookings);
 router.post('/:id/cancel', bookingController_1.BookingController.cancelBooking);
+router.patch('/:id', bookingController_1.BookingController.updateBooking);
 exports.default = router;

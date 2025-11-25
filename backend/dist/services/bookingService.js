@@ -65,5 +65,36 @@ class BookingService {
         const cancelledBooking = await Booking_1.BookingModel.cancel(id);
         return { booking: cancelledBooking };
     }
+    static async updateBooking(id, data) {
+        const booking = await Booking_1.BookingModel.findById(id);
+        if (!booking) {
+            return { booking: null, error: 'Booking not found' };
+        }
+        if (booking.status === 'CANCELLED') {
+            return { booking: null, error: 'Cannot update a cancelled booking' };
+        }
+        const updateData = {};
+        if (data.userName) {
+            updateData.userName = data.userName;
+        }
+        if (data.startTime || data.endTime) {
+            const startTime = data.startTime ? new Date(data.startTime) : new Date(booking.startTime);
+            const endTime = data.endTime ? new Date(data.endTime) : new Date(booking.endTime);
+            // Check for conflicts (excluding current booking)
+            const conflicts = await Booking_1.BookingModel.findConflictingBookings(booking.roomId, startTime, endTime, id);
+            if (conflicts.length > 0) {
+                return { booking: null, error: 'Room is already booked for the selected time' };
+            }
+            updateData.startTime = startTime;
+            updateData.endTime = endTime;
+            // Recalculate price if time changed
+            const room = await Room_1.RoomModel.findById(booking.roomId);
+            if (room) {
+                updateData.totalPrice = (0, pricing_1.calculatePrice)(room.baseHourlyRate, startTime, endTime);
+            }
+        }
+        const updatedBooking = await Booking_1.BookingModel.update(id, updateData);
+        return { booking: updatedBooking };
+    }
 }
 exports.BookingService = BookingService;
