@@ -19,7 +19,7 @@ app.use('/api/rooms', roomRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
-app.get('/health', (req, res) => {
+app.get('/health', (req: express.Request, res: express.Response) => {
   res.json({ status: 'ok' });
 });
 
